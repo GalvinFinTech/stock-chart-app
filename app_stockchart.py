@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 
 
@@ -50,31 +49,28 @@ def main():
             tab1, tab2 = st.tabs(["Sector", "Exchange"])
             with tab1:
                 st.header("Sector Bar Chart")
-                #plost.bar_chart(data=symbol_data, bar='Sector', value='Sector')
                 sector_counts = symbol_data['Sector'].value_counts()
-                st.bar_chart(sector_counts)
+                fig_sector = go.Figure([go.Bar(x=sector_counts.index, y=sector_counts.values)])
+                fig_sector.update_layout(title='Số lượng cổ phiếu theo ngành')
+                st.plotly_chart(fig_sector)
+
+            # Tab 2: Biểu đồ tròn cho số lượng cổ phiếu theo sàn giao dịch
             with tab2:
                 st.header("Exchange Pie Chart")
-                #plost.pie_chart(data=symbol_data, theta='Exchange', color='Exchange')
                 exchange_counts = symbol_data['Exchange'].value_counts()
-                st.plotly_chart(px.pie(exchange_counts, names=exchange_counts.index, values=exchange_counts.values))
-
+                fig_exchange = go.Figure([go.Pie(labels=exchange_counts.index, values=exchange_counts.values)])
+                fig_exchange.update_layout(title='Số lượng cổ phiếu theo sàn giao dịch')
+                st.plotly_chart(fig_exchange)
 
         elif options == 'Data Visualization':
             st.header("Data Visualization")
             st.sidebar.header("Choose your filter:")
 
-            # Tạo một input text để người dùng nhập mã cổ phiếu
-            symbol_input = st.sidebar.text_input('Enter stock code (Example: VCB):')
+            symbol = st.sidebar.text_input('Enter stock code (Example: VCB):', value=price_data.columns[1])
 
-            # Kiểm tra xem người dùng đã nhập mã cổ phiếu chưa
-            if not symbol_input:
-                st.warning("Please enter a stock code.")
-            elif symbol_input not in price_data.columns:
+            if symbol not in price_data.columns:
                 st.warning("Invalid stock code. Please enter a valid stock code.")
             else:
-                symbol = symbol_input  # Nếu mã cổ phiếu hợp lệ, sử dụng mã cổ phiếu người dùng đã nhập
-
                 chart_type = st.sidebar.selectbox('Select Chart Type', ['Line', 'Bar', 'Scatter', 'Histogram'])
                 selected_indicators = st.sidebar.multiselect('Choose technical indicators',
                                                              ['MACD', 'RSI', 'SMA', 'BBands', 'EMA',
@@ -98,26 +94,12 @@ def main():
                     data1 = selected_data
                     st.write(data1)
             with left_column:
-                    if chart_type == 'Line':
-                        color_palette = px.colors.qualitative.Plotly
-                        fig = px.line(selected_data, x='Date', y=symbol,
-                                      title=f'Biểu đồ đường của mã cổ phiếu {symbol}',
-                                      color_discrete_sequence=color_palette)
-                    elif chart_type == 'Bar':
-                        color_palette = px.colors.qualitative.Set1
-                        fig = px.bar(selected_data, x='Date', y=symbol,
-                                     title=f'Biểu đồ cột của mã cổ phiếu {symbol}',
-                                     color_discrete_sequence=color_palette)
-                    elif chart_type == 'Scatter':
-                        color_palette = px.colors.sequential.Viridis
-                        fig = px.scatter(selected_data, x='Date', y=symbol,
-                                         title=f'Biểu đồ phân tán của mã cổ phiếu {symbol}',
-                                         color_continuous_scale=color_palette)
-                    elif chart_type == 'Histogram':
-                        custom_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
-                        fig = px.histogram(selected_data, x=symbol, title=f'Biểu đồ histogram của mã cổ phiếu {symbol}',
-                                           color_discrete_sequence=custom_colors)
-
+                if chart_type == 'Line':
+                    # Tạo biểu đồ đường
+                    fig = go.Figure()
+                    fig.add_trace(
+                        go.Scatter(x=selected_data['Date'], y=selected_data[symbol], mode='lines', name=symbol,
+                                   line=dict(color='blue')))
                     fig.update_xaxes(title_text='Ngày', rangeslider_visible=True, rangeselector=dict(
                         buttons=[
                             dict(count=1, label="1m", step="month", stepmode="backward"),
@@ -128,8 +110,35 @@ def main():
                         ]
                     ))
                     fig.update_yaxes(title_text='Giá đóng cửa')
-                    st.plotly_chart(fig)
-                    with st.expander("Thông tin về mã cổ phiếu"):
+                    fig.update_layout(title=f'Biểu đồ đường của mã cổ phiếu {symbol}')
+                elif chart_type == 'Bar':
+                    # Tạo biểu đồ cột
+                    fig = go.Figure()
+                    fig.add_trace(
+                        go.Bar(x=selected_data['Date'], y=selected_data[symbol], name=symbol, marker_color='blue'))
+                    fig.update_xaxes(title_text='Ngày')
+                    fig.update_yaxes(title_text='Giá đóng cửa')
+                    fig.update_layout(title=f'Biểu đồ cột của mã cổ phiếu {symbol}')
+
+                elif chart_type == 'Scatter':
+                    fig = go.Figure()
+                    fig.add_trace(
+                        go.Scatter(x=selected_data['Date'], y=selected_data[symbol], mode='markers', name=symbol,
+                                   marker=dict(color='blue')))
+                    fig.update_xaxes(title_text='Ngày', rangeslider_visible=True)
+                    fig.update_yaxes(title_text='Giá đóng cửa')
+                    fig.update_layout(title=f'Biểu đồ phân tán của mã cổ phiếu {symbol}')
+
+                elif chart_type == 'Histogram':
+                    # Tạo biểu đồ histogram
+                    fig = go.Figure()
+                    fig.add_trace(go.Histogram(x=selected_data[symbol], name=symbol, marker_color='blue'))
+                    fig.update_xaxes(title_text='Giá đóng cửa')
+                    fig.update_yaxes(title_text='Số lần')
+                    fig.update_layout(title=f'Biểu đồ histogram của mã cổ phiếu {symbol}')
+                st.plotly_chart(fig)
+
+                with st.expander("Thông tin về mã cổ phiếu"):
                         selected_stock_info = symbol_data[symbol_data['RIC'] == symbol]  # Lọc thông tin cho mã cổ phiếu đã chọn
                         if not selected_stock_info.empty:
                             full_name = selected_stock_info['Full Name'].values[0]
@@ -159,7 +168,7 @@ def main():
                         selected_data['SIGNAL'] = selected_data['MACD'].ewm(span=c, adjust=False).mean()
                         selected_data['MACD_HIST'] = selected_data['MACD'] - selected_data['12_EMA']
 
-                        fig = px.line()
+                        fig = go.Figure()
                         fig.add_trace(go.Scatter(x=selected_data['Date'], y=selected_data['MACD'], name='MACD',
                                                  line=dict(color='orange')))
                         fig.add_trace(go.Scatter(x=selected_data['Date'], y=selected_data['SIGNAL'], name='Signal Line',
@@ -179,18 +188,27 @@ def main():
                             rs = average_gain / average_loss
                             rsi = 100 - (100 / (1 + rs))
                             return rsi
-
-                        selected_data['RSI'] = calculate_rsi(selected_data[symbol])
+                        selected_data['RSI'] = calculate_rsi(selected_data[symbol],n)
 
                         fig = go.Figure()
                         fig.add_trace(go.Scatter(x=selected_data['Date'], y=selected_data['RSI'], name='RSI',
                                                  line=dict(color='purple')))
-                        fig.add_shape(type='line', x0=selected_data['Date'].min(), x1=selected_data['Date'].max(),
-                                      y0=80,
-                                      line=dict(color='red', width=2, dash='dash'))
-                        fig.add_shape(type='line', x0=selected_data['Date'].min(), x1=selected_data['Date'].max(),
-                                      y0=20,
-                                      line=dict(color='green', width=2, dash='dash'))
+                        fig.add_shape(type='line', x0=selected_data['Date'].min(), x1=selected_data['Date'].max(), y0=80, y1=80,
+                                      line=dict(color='red', width=2, dash='dash'), xref='x', yref='y')
+                        fig.add_shape(type='line', x0=selected_data['Date'].min(), x1=selected_data['Date'].max(), y0=20, y1=20,
+                                      line=dict(color='green', width=2, dash='dash'), xref='x', yref='y')
+
+                        fig.add_annotation(
+                            x=selected_data['Date'].max(), y=80,
+                            text="Overbought", showarrow=True,
+                            font=dict(family="Arial", size=14, color="red"),
+                            align="center", arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor="red")
+                        fig.add_annotation(
+                            x=selected_data['Date'].max(), y=20,
+                            text="Oversold", showarrow=True,
+                            font=dict(family="Arial", size=14, color="green"),
+                            align="center", arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor="green")
+
                         fig.update_xaxes(title='Ngày', rangeslider_visible=True)
                         fig.update_yaxes(title='Giá trị')
                         fig.update_layout(showlegend=True)
@@ -208,7 +226,7 @@ def main():
 
                     elif indicator == "BBands":
                         n = st.number_input("Length", value=20, min_value=1)
-                        k = st.number_input("Mult", value=2, min_value=0.1, step=0.1)
+                        k = st.number_input("Mult", value=2, min_value=1)
                         selected_data['SMA'] = selected_data[symbol].rolling(window=n).mean()
                         selected_data['Upper'] = selected_data['SMA'] + (k * selected_data[symbol].rolling(window=n).std())
                         selected_data['Lower'] = selected_data['SMA'] - (k * selected_data[symbol].rolling(window=n).std())
