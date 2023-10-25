@@ -1,7 +1,9 @@
+#pip install streamlit
+#pip install pandas
+#pip install plotly
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-
 
 st.set_page_config(page_title="Dashboard", page_icon="🌍", layout="wide")
 st.title(" :bar_chart: Dashboard")
@@ -116,7 +118,15 @@ def main():
                     fig = go.Figure()
                     fig.add_trace(
                         go.Bar(x=selected_data['Date'], y=selected_data[symbol], name=symbol, marker_color='blue'))
-                    fig.update_xaxes(title_text='Ngày')
+                    fig.update_xaxes(title_text='Ngày', rangeslider_visible=True, rangeselector=dict(
+                        buttons=[
+                            dict(count=1, label="1m", step="month", stepmode="backward"),
+                            dict(count=6, label="6m", step="month", stepmode="backward"),
+                            dict(count=1, label="YTD", step="year", stepmode="todate"),
+                            dict(count=1, label="1y", step="year", stepmode="backward"),
+                            dict(step="all")
+                        ]
+                    ))
                     fig.update_yaxes(title_text='Giá đóng cửa')
                     fig.update_layout(title=f'Biểu đồ cột của mã cổ phiếu {symbol}')
 
@@ -125,7 +135,15 @@ def main():
                     fig.add_trace(
                         go.Scatter(x=selected_data['Date'], y=selected_data[symbol], mode='markers', name=symbol,
                                    marker=dict(color='blue')))
-                    fig.update_xaxes(title_text='Ngày', rangeslider_visible=True)
+                    fig.update_xaxes(title_text='Ngày', rangeslider_visible=True, rangeselector=dict(
+                        buttons=[
+                            dict(count=1, label="1m", step="month", stepmode="backward"),
+                            dict(count=6, label="6m", step="month", stepmode="backward"),
+                            dict(count=1, label="YTD", step="year", stepmode="todate"),
+                            dict(count=1, label="1y", step="year", stepmode="backward"),
+                            dict(step="all")
+                        ]
+                    ))
                     fig.update_yaxes(title_text='Giá đóng cửa')
                     fig.update_layout(title=f'Biểu đồ phân tán của mã cổ phiếu {symbol}')
 
@@ -173,8 +191,8 @@ def main():
                                                  line=dict(color='orange')))
                         fig.add_trace(go.Scatter(x=selected_data['Date'], y=selected_data['SIGNAL'], name='Signal Line',
                                                  line=dict(color='blue')))
-                        fig.update_xaxes(title='Ngày', rangeslider_visible=True)
-                        fig.update_yaxes(title='Giá trị')
+                        fig.update_xaxes(title='Date', rangeslider_visible=True)
+                        fig.update_yaxes(title='Price')
                         fig.update_layout(showlegend=True)
 
                     elif indicator == "RSI":
@@ -209,8 +227,8 @@ def main():
                             font=dict(family="Arial", size=14, color="green"),
                             align="center", arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor="green")
 
-                        fig.update_xaxes(title='Ngày', rangeslider_visible=True)
-                        fig.update_yaxes(title='Giá trị')
+                        fig.update_xaxes(title='Date', rangeslider_visible=True)
+                        fig.update_yaxes(title='Price')
                         fig.update_layout(showlegend=True)
                     elif indicator == "SMA":
                         n = st.number_input("Length", value=50, min_value=1)
@@ -220,8 +238,8 @@ def main():
                                                  line=dict(color='blue')))
                         fig.add_trace(go.Scatter(x=selected_data['Date'], y=selected_data['SMA'], name=f'SMA {n} ngày',
                                                  line=dict(color='red')))
-                        fig.update_xaxes(title='Ngày')
-                        fig.update_yaxes(title='Giá trị')
+                        fig.update_xaxes(title='Date', rangeslider_visible=True)
+                        fig.update_yaxes(title='Price')
                         fig.update_layout(showlegend=True)
 
                     elif indicator == "BBands":
@@ -242,7 +260,7 @@ def main():
                         fig.add_trace(
                         go.Scatter(x=selected_data['Date'], y=selected_data['Lower'], name='Lower Bollinger Band',
                                    line=dict(color='purple')))
-                        fig.update_xaxes(title='Date')
+                        fig.update_xaxes(title='Date', rangeslider_visible=True)
                         fig.update_yaxes(title='Price')
                         fig.update_layout(showlegend=True)
 
@@ -255,9 +273,9 @@ def main():
                                                  line=dict(color='blue')))
                         fig.add_trace(go.Scatter(x=selected_data['Date'], y=selected_data['EMA'], name=f'EMA {n} ngày',
                                                  line=dict(color='red')))
-                        fig.update_xaxes(title='Ngày')
-                        fig.update_xaxes(title='Ngày', rangeslider_visible=True)
-                        fig.update_yaxes(title='Giá trị')
+
+                        fig.update_xaxes(title='Date', rangeslider_visible=True)
+                        fig.update_yaxes(title='Price')
                         fig.update_layout(showlegend=True)
                     elif indicator == 'Stochastic Oscillator':
                         k_period = st.number_input("K Period", value=14, min_value=1)
@@ -271,6 +289,16 @@ def main():
                         fig = go.Figure()
                         fig.add_trace(go.Scatter(x=selected_data.index, y=stock_k, mode='lines', name="Stochastic K"))
                         fig.add_trace(go.Scatter(x=selected_data.index, y=stock_d, mode='lines', name="Stochastic D"))
+                        fig.add_shape(type='line', x0=selected_data['Date'].min(), x1=selected_data['Date'].max(),
+                                      y0=80, y1=80,
+                                      line=dict(color='red', width=2, dash='dash'), xref='x', yref='y')
+                        fig.add_shape(type='line', x0=selected_data['Date'].min(), x1=selected_data['Date'].max(),
+                                      y0=20, y1=20,
+                                      line=dict(color='green', width=2, dash='dash'), xref='x', yref='y')
+            
+                        fig.update_xaxes(title='Date', rangeslider_visible=True)
+                        fig.update_yaxes(title='Price')
+                        fig.update_layout(showlegend=True)
                     st.markdown(f'### {indicator}')
                     st.plotly_chart(fig, use_container_width=True)
 if __name__ == "__main__":
