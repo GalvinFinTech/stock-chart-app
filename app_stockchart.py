@@ -280,25 +280,15 @@ def main():
                     elif indicator == 'Stochastic Oscillator':
                         k_period = st.number_input("K Period", value=14, min_value=1)
                         d_period = st.number_input("D Period", value=3, min_value=1)
-                        stock_k = ((selected_data[symbol] - selected_data[symbol].rolling(
-                            window=k_period).min()) / (selected_data[symbol].rolling(window=k_period).max() -
-                                                       selected_data[symbol].rolling(
-                                                           window=k_period).min())) * 100
-                        stock_d = stock_k.rolling(window=d_period).mean()
+                        selected_data[symbol] = pd.to_numeric(selected_data[symbol], errors='coerce')
+                        stoch_k = 100 * (selected_data[symbol] - selected_data[symbol].rolling(window=k_period).min()) / (
+                                selected_data[symbol].rolling(window=k_period).max() - selected_data[symbol].rolling(
+                            window=k_period).min())
+                        stoch_d = stoch_k.rolling(window=d_period).mean()
 
                         fig = go.Figure()
-                        fig.add_trace(go.Scatter(x=selected_data.index, y=stock_k, mode='lines', name="Stochastic K"))
-                        fig.add_trace(go.Scatter(x=selected_data.index, y=stock_d, mode='lines', name="Stochastic D"))
-                        fig.add_shape(type='line', x0=selected_data['Date'].min(), x1=selected_data['Date'].max(),
-                                      y0=80, y1=80,
-                                      line=dict(color='red', width=2, dash='dash'), xref='x', yref='y')
-                        fig.add_shape(type='line', x0=selected_data['Date'].min(), x1=selected_data['Date'].max(),
-                                      y0=20, y1=20,
-                                      line=dict(color='green', width=2, dash='dash'), xref='x', yref='y')
-            
-                        fig.update_xaxes(title='Date', rangeslider_visible=True)
-                        fig.update_yaxes(title='Price')
-                        fig.update_layout(showlegend=True)
+                        fig.add_trace(go.Scatter(x=stoch_k.index, y=stoch_k, mode='lines', name='Stochastic K'))
+                        fig.add_trace(go.Scatter(x=stoch_d.index, y=stoch_d, mode='lines', name='Stochastic D'))
                     st.markdown(f'### {indicator}')
                     st.plotly_chart(fig, use_container_width=True)
 if __name__ == "__main__":
