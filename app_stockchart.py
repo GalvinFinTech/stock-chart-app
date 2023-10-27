@@ -4,11 +4,29 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+import requests
+from streamlit_lottie import st_lottie
+import plotly.express as px
+
+def load_lottieurl(url):
+    r = requests.get(url)
+    if r.status_code != 200:
+        return None
+    return r.json()
+
+# ---- LOAD ASSETS ----
+stock1 = load_lottieurl("https://lottie.host/c9bc0a11-4290-48b5-9597-f0f0ebdf7308/fSkUtq2VN2.json")
+stock2 = load_lottieurl("https://lottie.host/cc8b8e95-e25e-4115-8b18-2f93208455f2/BtgpHgRIAN.json")
 
 st.set_page_config(page_title="Dashboard", page_icon="🌍", layout="wide")
-st.title(" :bar_chart: Dashboard")
-st.subheader("🔔 Analytics")
-st.markdown('<style>div.block-container{padding-top:1rem;}</style>', unsafe_allow_html=True)
+# ---- SET MAIN ----
+left_column, right_column = st.columns(2)
+with right_column:
+    st_lottie(stock1, height=300, key="stock1")
+with left_column:
+    st.title(" :bar_chart: Stock Dashboard")
+    st.subheader("🔔 Welcome to Stock Dashboard!")
+    st.write("**Just upload data stock and the site will tell you more about the stock :point_up_2:**")
 
 @st.cache_data
 def load_data_from_file(file):
@@ -25,9 +43,12 @@ def load_data_from_file(file):
     return None
 def main():
     # Sidebar cho việc tải dữ liệu
-    st.sidebar.header("Data Source")
-    file = st.sidebar.file_uploader("Please upload an Excel file:", type=["xls", "xlsx"])
-    data_dict = load_data_from_file(file)
+    with st.sidebar:
+        st.sidebar.header("Data Source")
+        file = st.sidebar.file_uploader("Please upload an excel file:", type=["xls", "xlsx"])
+        data_dict = load_data_from_file(file)
+        st_lottie(stock2, width=250, height=250, key="stock2")
+
     if data_dict is not None:
         symbol_data = data_dict['Symbol']
         price_data = data_dict['Price']
@@ -44,25 +65,29 @@ def main():
 
         if options == 'Data Analysis':
             st.header("Data Analysis")
-            st.write("Stock Data:")
-            st.write(symbol_data)
-            st.write("Price Data:")
-            st.write(price_data)
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write("Stock Data:")
+                st.write(symbol_data)
+            with col2:
+                st.write("Price Data:")
+                st.write(price_data)
+
             tab1, tab2 = st.tabs(["Sector", "Exchange"])
             with tab1:
-                st.header("Sector Bar Chart")
-                sector_counts = symbol_data['Sector'].value_counts()
-                fig_sector = go.Figure([go.Bar(x=sector_counts.index, y=sector_counts.values)])
-                fig_sector.update_layout(title='Số lượng cổ phiếu theo ngành')
-                st.plotly_chart(fig_sector)
+                    st.header("Sector Bar Chart")
+                    sector_counts = symbol_data['Sector'].value_counts()
+                    fig_sector = go.Figure([go.Bar(x=sector_counts.index, y=sector_counts.values)])
+                    fig_sector.update_layout(title='Số lượng cổ phiếu theo ngành')
+                    st.plotly_chart(fig_sector,use_container_width=True)
 
             # Tab 2: Biểu đồ tròn cho số lượng cổ phiếu theo sàn giao dịch
             with tab2:
-                st.header("Exchange Pie Chart")
-                exchange_counts = symbol_data['Exchange'].value_counts()
-                fig_exchange = go.Figure([go.Pie(labels=exchange_counts.index, values=exchange_counts.values)])
-                fig_exchange.update_layout(title='Số lượng cổ phiếu theo sàn giao dịch')
-                st.plotly_chart(fig_exchange)
+                    st.header("Exchange Pie Chart")
+                    exchange_counts = symbol_data['Exchange'].value_counts()
+                    fig_exchange = go.Figure([go.Pie(labels=exchange_counts.index, values=exchange_counts.values)])
+                    fig_exchange.update_layout(title='Số lượng cổ phiếu theo sàn giao dịch')
+                    st.plotly_chart(fig_exchange, use_container_width=True)
 
         elif options == 'Data Visualization':
             st.header("Data Visualization")
@@ -73,7 +98,7 @@ def main():
             if symbol not in price_data.columns:
                 st.warning("Invalid stock code. Please enter a valid stock code.")
             else:
-                chart_type = st.sidebar.selectbox('Select Chart Type', ['Line', 'Bar', 'Scatter', 'Histogram'])
+                chart_type = st.sidebar.selectbox('Select Chart Type', ['Line', 'Bar', 'Scatter'])
                 selected_indicators = st.sidebar.multiselect('Choose technical indicators',
                                                              ['MACD', 'RSI', 'SMA', 'BBands', 'EMA',
                                                               'Stochastic Oscillator'])
@@ -95,67 +120,6 @@ def main():
                 with st.expander("Price Data"):
                     data1 = selected_data
                     st.write(data1)
-            with left_column:
-                if chart_type == 'Line':
-                    # Tạo biểu đồ đường
-                    fig = go.Figure()
-                    fig.add_trace(
-                        go.Scatter(x=selected_data['Date'], y=selected_data[symbol], mode='lines', name=symbol,
-                                   line=dict(color='blue')))
-                    fig.update_xaxes(title_text='Ngày', rangeslider_visible=True, rangeselector=dict(
-                        buttons=[
-                            dict(count=1, label="1m", step="month", stepmode="backward"),
-                            dict(count=6, label="6m", step="month", stepmode="backward"),
-                            dict(count=1, label="YTD", step="year", stepmode="todate"),
-                            dict(count=1, label="1y", step="year", stepmode="backward"),
-                            dict(step="all")
-                        ]
-                    ))
-                    fig.update_yaxes(title_text='Giá đóng cửa')
-                    fig.update_layout(title=f'Biểu đồ đường của mã cổ phiếu {symbol}')
-                elif chart_type == 'Bar':
-                    # Tạo biểu đồ cột
-                    fig = go.Figure()
-                    fig.add_trace(
-                        go.Bar(x=selected_data['Date'], y=selected_data[symbol], name=symbol, marker_color='blue'))
-                    fig.update_xaxes(title_text='Ngày', rangeslider_visible=True, rangeselector=dict(
-                        buttons=[
-                            dict(count=1, label="1m", step="month", stepmode="backward"),
-                            dict(count=6, label="6m", step="month", stepmode="backward"),
-                            dict(count=1, label="YTD", step="year", stepmode="todate"),
-                            dict(count=1, label="1y", step="year", stepmode="backward"),
-                            dict(step="all")
-                        ]
-                    ))
-                    fig.update_yaxes(title_text='Giá đóng cửa')
-                    fig.update_layout(title=f'Biểu đồ cột của mã cổ phiếu {symbol}')
-
-                elif chart_type == 'Scatter':
-                    fig = go.Figure()
-                    fig.add_trace(
-                        go.Scatter(x=selected_data['Date'], y=selected_data[symbol], mode='markers', name=symbol,
-                                   marker=dict(color='blue')))
-                    fig.update_xaxes(title_text='Ngày', rangeslider_visible=True, rangeselector=dict(
-                        buttons=[
-                            dict(count=1, label="1m", step="month", stepmode="backward"),
-                            dict(count=6, label="6m", step="month", stepmode="backward"),
-                            dict(count=1, label="YTD", step="year", stepmode="todate"),
-                            dict(count=1, label="1y", step="year", stepmode="backward"),
-                            dict(step="all")
-                        ]
-                    ))
-                    fig.update_yaxes(title_text='Giá đóng cửa')
-                    fig.update_layout(title=f'Biểu đồ phân tán của mã cổ phiếu {symbol}')
-
-                elif chart_type == 'Histogram':
-                    # Tạo biểu đồ histogram
-                    fig = go.Figure()
-                    fig.add_trace(go.Histogram(x=selected_data[symbol], name=symbol, marker_color='blue'))
-                    fig.update_xaxes(title_text='Giá đóng cửa')
-                    fig.update_yaxes(title_text='Số lần')
-                    fig.update_layout(title=f'Biểu đồ histogram của mã cổ phiếu {symbol}')
-                st.plotly_chart(fig)
-
                 with st.expander("Thông tin về mã cổ phiếu"):
                         selected_stock_info = symbol_data[symbol_data['RIC'] == symbol]  # Lọc thông tin cho mã cổ phiếu đã chọn
                         if not selected_stock_info.empty:
@@ -174,6 +138,34 @@ def main():
                             st.write(f"Thị trường: {market}")
                             st.write(f"Tiền tệ: {currency}")
                             st.write(f"Ngành: {sector}")
+            with left_column:
+                if chart_type == 'Line':
+                    color_palette = px.colors.qualitative.Plotly
+                    fig = px.line(selected_data, x='Date', y=symbol,
+                                  title=f'Biểu đồ đường của mã cổ phiếu {symbol}',
+                                  color_discrete_sequence=color_palette)
+                elif chart_type == 'Bar':
+                    color_palette = px.colors.qualitative.Set1
+                    fig = px.bar(selected_data, x='Date', y=symbol,
+                                 title=f'Biểu đồ cột của mã cổ phiếu {symbol}',
+                                 color_discrete_sequence=color_palette)
+                elif chart_type == 'Scatter':
+                    color_palette = px.colors.sequential.Viridis
+                    fig = px.scatter(selected_data, x='Date', y=symbol,
+                                     title=f'Biểu đồ phân tán của mã cổ phiếu {symbol}',
+                                     color_continuous_scale=color_palette)
+                fig.update_xaxes(title_text='Date', rangeslider_visible=True, rangeselector=dict(
+                    buttons=[
+                        dict(count=1, label="1m", step="month", stepmode="backward"),
+                        dict(count=6, label="6m", step="month", stepmode="backward"),
+                        dict(count=1, label="YTD", step="year", stepmode="todate"),
+                        dict(count=1, label="1y", step="year", stepmode="backward"),
+                        dict(step="all")
+                    ]
+                ))
+                fig.update_yaxes(title_text='Price')
+                st.plotly_chart(fig,use_container_width=True)
+
             with st.expander("Technical Indicator"):
                 for indicator in selected_indicators:
                     if indicator == "MACD":
@@ -188,48 +180,28 @@ def main():
 
                         fig = go.Figure()
                         fig.add_trace(go.Scatter(x=selected_data['Date'], y=selected_data['MACD'], name='MACD',
-                                                 line=dict(color='orange')))
-                        fig.add_trace(go.Scatter(x=selected_data['Date'], y=selected_data['SIGNAL'], name='Signal Line',
                                                  line=dict(color='blue')))
-                        fig.update_xaxes(title='Date', rangeslider_visible=True)
-                        fig.update_yaxes(title='Price')
-                        fig.update_layout(showlegend=True)
-
+                        fig.add_trace(go.Scatter(x=selected_data['Date'], y=selected_data['SIGNAL'], name='Signal Line',
+                                                 line=dict(color='red')))
                     elif indicator == "RSI":
                         n = st.number_input("Length", value=14, min_value=1)
-                        def calculate_rsi(data, period=n):
-                            delta = data.diff(1)
-                            gain = delta.where(delta > 0, 0)
-                            loss = -delta.where(delta < 0, 0)
-                            average_gain = gain.rolling(window=period).mean()
-                            average_loss = loss.rolling(window=period).mean()
-                            rs = average_gain / average_loss
-                            rsi = 100 - (100 / (1 + rs))
-                            return rsi
-                        selected_data['RSI'] = calculate_rsi(selected_data[symbol],n)
+                        delta = selected_data[symbol].diff(1)
+                        gain = delta.where(delta > 0, 0)
+                        loss = -delta.where(delta < 0, 0)
+                        average_gain = gain.rolling(window=n).mean()
+                        average_loss = loss.rolling(window=n).mean()
+                        rs = average_gain / average_loss
+                        rsi = 100 - (100 / (1 + rs))
 
                         fig = go.Figure()
-                        fig.add_trace(go.Scatter(x=selected_data['Date'], y=selected_data['RSI'], name='RSI',
+                        fig.add_trace(go.Scatter(x=selected_data['Date'], y=rsi, name='RSI',
                                                  line=dict(color='purple')))
                         fig.add_shape(type='line', x0=selected_data['Date'].min(), x1=selected_data['Date'].max(), y0=80, y1=80,
-                                      line=dict(color='red', width=2, dash='dash'), xref='x', yref='y')
+                                      line=dict(color='red', width=2, dash='dash'), xref='x', yref='y', name='Overbought')
                         fig.add_shape(type='line', x0=selected_data['Date'].min(), x1=selected_data['Date'].max(), y0=20, y1=20,
-                                      line=dict(color='green', width=2, dash='dash'), xref='x', yref='y')
+                                      line=dict(color='green', width=2, dash='dash'), xref='x', yref='y', name='Oversold')
 
-                        fig.add_annotation(
-                            x=selected_data['Date'].max(), y=80,
-                            text="Overbought", showarrow=True,
-                            font=dict(family="Arial", size=14, color="red"),
-                            align="center", arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor="red")
-                        fig.add_annotation(
-                            x=selected_data['Date'].max(), y=20,
-                            text="Oversold", showarrow=True,
-                            font=dict(family="Arial", size=14, color="green"),
-                            align="center", arrowhead=2, arrowsize=1, arrowwidth=2, arrowcolor="green")
 
-                        fig.update_xaxes(title='Date', rangeslider_visible=True)
-                        fig.update_yaxes(title='Price')
-                        fig.update_layout(showlegend=True)
                     elif indicator == "SMA":
                         n = st.number_input("Length", value=50, min_value=1)
                         selected_data['SMA'] = selected_data[symbol].rolling(window=n).mean()
@@ -238,9 +210,7 @@ def main():
                                                  line=dict(color='blue')))
                         fig.add_trace(go.Scatter(x=selected_data['Date'], y=selected_data['SMA'], name=f'SMA {n} ngày',
                                                  line=dict(color='red')))
-                        fig.update_xaxes(title='Date', rangeslider_visible=True)
-                        fig.update_yaxes(title='Price')
-                        fig.update_layout(showlegend=True)
+                        fig.update_yaxes(title_text='Price')
 
                     elif indicator == "BBands":
                         n = st.number_input("Length", value=20, min_value=1)
@@ -253,30 +223,25 @@ def main():
                         fig.add_trace(go.Scatter(x=selected_data['Date'], y=selected_data[symbol], name='Stock Price',
                                              line=dict(color='blue')))
                         fig.add_trace(go.Scatter(x=selected_data['Date'], y=selected_data['SMA'], name=f'SMA {n} Days',
-                                             line=dict(color='red')))
+                                             line=dict(color='black')))
                         fig.add_trace(
                         go.Scatter(x=selected_data['Date'], y=selected_data['Upper'], name='Upper Bollinger Band',
                                    line=dict(color='green')))
                         fig.add_trace(
                         go.Scatter(x=selected_data['Date'], y=selected_data['Lower'], name='Lower Bollinger Band',
-                                   line=dict(color='purple')))
-                        fig.update_xaxes(title='Date', rangeslider_visible=True)
-                        fig.update_yaxes(title='Price')
-                        fig.update_layout(showlegend=True)
-
+                                   line=dict(color='green')))
+                        fig.update_yaxes(title_text='Price')
 
                     elif indicator == "EMA":
                         n = st.number_input("Length", value=12, min_value=1)
                         selected_data['EMA'] = selected_data[symbol].ewm(span=n, adjust=False).mean()
                         fig = go.Figure()
                         fig.add_trace(go.Scatter(x=selected_data['Date'], y=selected_data[symbol], name='Giá cổ phiếu',
-                                                 line=dict(color='blue')))
+                                                 line=dict(color='green')))
                         fig.add_trace(go.Scatter(x=selected_data['Date'], y=selected_data['EMA'], name=f'EMA {n} ngày',
                                                  line=dict(color='red')))
+                        fig.update_yaxes(title_text='Price')
 
-                        fig.update_xaxes(title='Date', rangeslider_visible=True)
-                        fig.update_yaxes(title='Price')
-                        fig.update_layout(showlegend=True)
                     elif indicator == 'Stochastic Oscillator':
                         k_period = st.number_input("K Period", value=14, min_value=1)
                         d_period = st.number_input("D Period", value=3, min_value=1)
@@ -287,8 +252,28 @@ def main():
                         stoch_d = stoch_k.rolling(window=d_period).mean()
 
                         fig = go.Figure()
-                        fig.add_trace(go.Scatter(x=stoch_k.index, y=stoch_k, mode='lines', name='Stochastic K'))
-                        fig.add_trace(go.Scatter(x=stoch_d.index, y=stoch_d, mode='lines', name='Stochastic D'))
+                        fig.add_trace(
+                            go.Scatter(x=selected_data['Date'], y=stoch_k, line=dict(color='orange', width=1.5), name='Stochastic %K'))
+                        fig.add_trace(
+                            go.Scatter(x=selected_data['Date'], y=stoch_d, line=dict(color='blue', width=1.5), name='Stochastic %D'))
+
+                        fig.add_shape(type='line', x0=selected_data['Date'].min(), x1=selected_data['Date'].max(),
+                                      y0=80, y1=80,
+                                      line=dict(color='red', width=2, dash='dash'), xref='x', yref='y')
+                        fig.add_shape(type='line', x0=selected_data['Date'].min(), x1=selected_data['Date'].max(),
+                                      y0=20, y1=20,
+                                      line=dict(color='green', width=2, dash='dash'), xref='x', yref='y')
+
+                    fig.update_xaxes(title_text='Date', rangeslider_visible=True, rangeselector=dict(
+                        buttons=[
+                            dict(count=1, label="1m", step="month", stepmode="backward"),
+                            dict(count=6, label="6m", step="month", stepmode="backward"),
+                            dict(count=1, label="YTD", step="year", stepmode="todate"),
+                            dict(count=1, label="1y", step="year", stepmode="backward"),
+                            dict(step="all")
+                        ]
+                    ))
+                    fig.update_layout(showlegend=True)
                     st.markdown(f'### {indicator}')
                     st.plotly_chart(fig, use_container_width=True)
 if __name__ == "__main__":
