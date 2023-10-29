@@ -1,6 +1,3 @@
-#pip install streamlit
-#pip install pandas
-#pip install plotly
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -27,6 +24,13 @@ with left_column:
     st.title(" :bar_chart: Stock Dashboard")
     st.subheader("🔔 Welcome to Stock Dashboard!")
     st.write("**Just upload data stock and the site will tell you more about the stock :point_up_2:**")
+# Row A
+st.markdown('### Metrics')
+col1, col2, col3 = st.columns(3)
+col1.metric("Temperature", "70 °F", "1.2 °F")
+col2.metric("Wind", "9 mph", "-8%")
+col3.metric("Humidity", "86%", "4%")
+
 
 @st.cache_data
 def load_data_from_file(file):
@@ -41,6 +45,7 @@ def load_data_from_file(file):
     else:
         st.warning("No data loaded.")
     return None
+
 def main():
     # Sidebar cho việc tải dữ liệu
     with st.sidebar:
@@ -75,19 +80,21 @@ def main():
 
             tab1, tab2 = st.tabs(["Sector", "Exchange"])
             with tab1:
-                    st.header("Sector Bar Chart")
-                    sector_counts = symbol_data['Sector'].value_counts()
-                    fig_sector = go.Figure([go.Bar(x=sector_counts.index, y=sector_counts.values)])
-                    fig_sector.update_layout(title='Số lượng cổ phiếu theo ngành')
-                    st.plotly_chart(fig_sector,use_container_width=True)
+                st.header("Sector Bar Chart")
+                sector_counts = symbol_data['Sector'].value_counts()
+                color_palette = px.colors.qualitative.Light24
+                fig_sector = px.bar(x=sector_counts.index, y=sector_counts.values, title='Số lượng cổ phiếu theo ngành',
+                                    color_discrete_sequence=color_palette)
+                st.plotly_chart(fig_sector, use_container_width=True)
 
             # Tab 2: Biểu đồ tròn cho số lượng cổ phiếu theo sàn giao dịch
             with tab2:
-                    st.header("Exchange Pie Chart")
-                    exchange_counts = symbol_data['Exchange'].value_counts()
-                    fig_exchange = go.Figure([go.Pie(labels=exchange_counts.index, values=exchange_counts.values)])
-                    fig_exchange.update_layout(title='Số lượng cổ phiếu theo sàn giao dịch')
-                    st.plotly_chart(fig_exchange, use_container_width=True)
+                st.header("Exchange Pie Chart")
+                exchange_counts = symbol_data['Exchange'].value_counts()
+                fig_exchange = go.Figure([go.Pie(labels=exchange_counts.index, values=exchange_counts.values)])
+                fig_exchange.update_layout(title='Số lượng cổ phiếu theo sàn giao dịch')
+                st.plotly_chart(fig_exchange, use_container_width=True)
+
 
         elif options == 'Data Visualization':
             st.header("Data Visualization")
@@ -121,7 +128,7 @@ def main():
                     data1 = selected_data
                     st.write(data1)
                 with st.expander("Thông tin về mã cổ phiếu"):
-                        selected_stock_info = symbol_data[symbol_data['RIC'] == symbol]  # Lọc thông tin cho mã cổ phiếu đã chọn
+                        selected_stock_info = symbol_data[symbol_data['RIC'] == symbol]
                         if not selected_stock_info.empty:
                             full_name = selected_stock_info['Full Name'].values[0]
                             start_date = selected_stock_info['Start Date'].values[0]
@@ -197,9 +204,9 @@ def main():
                         fig.add_trace(go.Scatter(x=selected_data['Date'], y=rsi, name='RSI',
                                                  line=dict(color='purple')))
                         fig.add_shape(type='line', x0=selected_data['Date'].min(), x1=selected_data['Date'].max(), y0=80, y1=80,
-                                      line=dict(color='red', width=2, dash='dash'), xref='x', yref='y', name='Overbought')
+                                      line=dict(color='red', width=2, dash='dash'), xref='x', yref='y')
                         fig.add_shape(type='line', x0=selected_data['Date'].min(), x1=selected_data['Date'].max(), y0=20, y1=20,
-                                      line=dict(color='green', width=2, dash='dash'), xref='x', yref='y', name='Oversold')
+                                      line=dict(color='green', width=2, dash='dash'), xref='x', yref='y')
 
 
                     elif indicator == "SMA":
