@@ -24,13 +24,6 @@ with left_column:
     st.title(" :bar_chart: Stock Dashboard")
     st.subheader("🔔 Welcome to Stock Dashboard!")
     st.write("**Just upload data stock and the site will tell you more about the stock :point_up_2:**")
-# Row A
-st.markdown('### Metrics')
-col1, col2, col3 = st.columns(3)
-col1.metric("Temperature", "70 °F", "1.2 °F")
-col2.metric("Wind", "9 mph", "-8%")
-col3.metric("Humidity", "86%", "4%")
-
 
 @st.cache_data
 def load_data_from_file(file):
