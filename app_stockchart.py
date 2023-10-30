@@ -93,7 +93,7 @@ def main():
             st.header("Data Visualization")
             st.sidebar.header("Choose your filter:")
 
-            symbol = st.sidebar.text_input('Enter stock code (Example: VCB):', value=price_data.columns[1])
+            symbol = st.sidebar.text_input('Enter stock code (Example: VCB):', value=price_data.columns[1]).upper()
 
             if symbol not in price_data.columns:
                 st.warning("Invalid stock code. Please enter a valid stock code.")
