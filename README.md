@@ -1,4 +1,5 @@
 # Stock Dashboard
+http://localhost:8501
 
 ## Project Overview
 
