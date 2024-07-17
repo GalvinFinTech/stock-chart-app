@@ -22,9 +22,10 @@ This project is a hands-on exercise in data visualization using a dashboard desi
 ## Screenshots
 
 - Screenshot of the main dashboard view
-![Screenshot of the main dashboard view.](main.png)
-- Screenshot of the technical analysis section.
 ![Screenshot of the technical analysis section.](tech.png)
+- Screenshot of the technical analysis section.
+![Screenshot of the main dashboard view.](main.png)
+
 
 
 ## Acknowledgements
