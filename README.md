@@ -26,6 +26,6 @@ Contributions are welcome! Please fork the repository and submit a pull request 
 
 ## 6. Acknowledgements
 
-Course: Financial Data Analysis and Visualization
-University: University of Economics and Laws
+Course: Financial Data Analysis and Visualization.
+University: University of Economics and Laws.
 For any questions or suggestions, please feel free to contact me at nhv.analysis@gmail.com.
