@@ -1,5 +1,5 @@
 # Stock Dashboard 
-#### http://localhost:8501.
+#### [http://localhost:8501.](https://stock-chart-app.streamlit.app)
 DATA: https://docs.google.com/spreadsheets/d/1wyXyZbCToVdzuFVtlCICyo9KxKtX9w5g/edit?usp=share_link&ouid=112575585036662129109&rtpof=true&sd=true.
 
 ## Project Overview
